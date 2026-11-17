@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build and runtime outputs
+dist/
+build/
+*.glb
+*.meshy
+decrypted_model.glb
+test_output.glb
+*.log
+npm-debug.log*
+
+# Environment and OS files
+.env
+.env.local
+.DS_Store
+Thumbs.db
+
+# Editor configs
+.vscode/
+.idea/
