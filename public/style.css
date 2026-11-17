@@ -162,25 +162,22 @@ body {
   box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
 }
 
-.github-link {
+.github-icon-link {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--text-secondary);
+  justify-content: center;
+  color: var(--text-muted);
   text-decoration: none;
-  background: var(--bg-panel);
-  border: 1px solid var(--border-structural);
-  padding: 5px 12px;
+  background: transparent;
+  border: none;
+  padding: 6px;
   border-radius: var(--radius-xs);
-  transition: all 0.15s ease;
+  transition: color 0.15s ease, transform 0.15s ease;
 }
 
-.github-link:hover {
+.github-icon-link:hover {
   color: var(--text-pure);
-  border-color: var(--text-muted);
-  background: var(--bg-control);
+  transform: scale(1.1);
 }
 
 /* Hero Section */
