@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: meshy-extractor
+    runtime: node
+    plan: free
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20
