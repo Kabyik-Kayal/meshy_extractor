@@ -63,10 +63,10 @@ You can also run the extractor directly from your command line:
 
 ```bash
 # Using npm script with full canonical URL (Recommended):
-npm run cli https://www.meshy.ai/3d-models/Distinguished-Gentleman-01a16e9a-db8e-7603-9676-7e03390faac9
+npm run cli "https://www.meshy.ai/3d-models/Bullet-Rain-01a1e9b4-e914-77de-9458-b6625dea4cd6?utm_medium=referral-program&utm_source=meshy&utm_content=BBDLCQ&share_type=3d-models"
 
 # With a custom output filename:
-npm run cli https://www.meshy.ai/3d-models/Distinguished-Gentleman-01a16e9a-db8e-7603-9676-7e03390faac9 -o my_model.glb
+npm run cli "https://www.meshy.ai/3d-models/Bullet-Rain-01a1e9b4-e914-77de-9458-b6625dea4cd6?utm_medium=referral-program&utm_source=meshy&utm_content=BBDLCQ&share_type=3d-models" -o bullet_rain.glb
 
 # Directly decrypt a local .meshy file:
 npm run cli encrypted_model.meshy -o decrypted.glb

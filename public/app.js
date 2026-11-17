@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentBlobUrl = null;
 
   // Canonical full URL sample (bypasses Cloudflare redirect challenges)
-  const CANONICAL_SAMPLE_URL = 'https://www.meshy.ai/3d-models/Distinguished-Gentleman-01a16e9a-db8e-7603-9676-7e03390faac9';
+  const CANONICAL_SAMPLE_URL = 'https://www.meshy.ai/3d-models/Bullet-Rain-01a1e9b4-e914-77de-9458-b6625dea4cd6?utm_medium=referral-program&utm_source=meshy&utm_content=BBDLCQ&share_type=3d-models';
 
   // --- Tab Navigation ---
   tabLinkBtn.addEventListener('click', () => switchTab('link'));

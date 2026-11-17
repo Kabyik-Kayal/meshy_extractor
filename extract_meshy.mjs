@@ -20,7 +20,7 @@ Usage:
   node extract_meshy.mjs <share-url-or-file> [-o output.glb]
 
 Examples:
-  node extract_meshy.mjs https://www.meshy.ai/s/39mTE9 -o model.glb
+  node extract_meshy.mjs "https://www.meshy.ai/3d-models/Bullet-Rain-01a1e9b4-e914-77de-9458-b6625dea4cd6?utm_medium=referral-program&utm_source=meshy&utm_content=BBDLCQ&share_type=3d-models" -o bullet_rain.glb
   node extract_meshy.mjs encrypted_model.meshy -o decrypted.glb
 `);
         process.exit(0);
