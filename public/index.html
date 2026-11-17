@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meshy AI 3D Model Extractor | Download Raw .GLB 3D Models</title>
+  <meta name="description" content="Extract, decrypt, and download raw full-resolution 3D models (.glb) from any public Meshy AI share link using client-authorized WebAssembly decryption.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/style.css">
+  <!-- Google Model Viewer for hardware-accelerated WebGL 3D preview -->
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+</head>
+<body>
+  <div class="bg-grid"></div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon">
+          <img src="/favicon.svg" alt="Meshy Extractor Logo">
+        </div>
+        <div class="brand-title">
+          Meshy<span>Extractor</span>
+          <span class="badge-version">v1.0 WASM</span>
+        </div>
+      </div>
+      <div class="header-links">
+        <a href="https://github.com/Kabyik-Kayal/meshy_extractor" target="_blank" rel="noopener noreferrer" class="github-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+          </svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        </svg>
+        <span>Zero-Loss 3D Model Extraction</span>
+      </div>
+      <h1>Extract Raw 3D Models from <span class="highlight">Meshy AI</span></h1>
+      <p>Paste any shareable Meshy link to decrypt and download uncompressed <strong>.glb</strong> models with full PBR textures, ready for Blender, Unreal Engine, and Unity.</p>
+    </section>
+
+    <!-- Main Extractor Card -->
+    <main class="extractor-card">
+      <!-- Tabs -->
+      <div class="card-tabs">
+        <button class="tab-btn active" id="tabLinkBtn" data-target="panelLink">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          </svg>
+          <span>Paste Share Link</span>
+        </button>
+        <button class="tab-btn" id="tabFileBtn" data-target="panelFile">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <span>Upload .meshy File</span>
+        </button>
+      </div>
+
+      <!-- Tab Panel 1: Paste Link -->
+      <div class="tab-panel active" id="panelLink">
+        <form class="input-form" id="extractForm">
+          <div class="input-group">
+            <div class="input-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </div>
+            <input 
+              type="text" 
+              id="urlInput" 
+              class="url-input" 
+              placeholder="Paste Meshy share URL (e.g. https://www.meshy.ai/s/39mTE9)..." 
+              autocomplete="off"
+              spellcheck="false"
+              required
+            >
+            <div class="input-actions">
+              <button type="button" id="pasteBtn" class="paste-btn">Paste</button>
+            </div>
+          </div>
+
+          <div class="form-helpers">
+            <button type="button" id="sampleBtn" class="sample-btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              <span>Try sample model: <em>Distinguished Gentleman</em></span>
+            </button>
+            <button type="submit" id="extractBtn" class="extract-btn">
+              <span class="btn-text">Extract & Decrypt Model</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Tab Panel 2: File Dropzone -->
+      <div class="tab-panel" id="panelFile">
+        <div class="dropzone" id="dropzone">
+          <input type="file" id="fileInput" accept=".meshy" style="display: none;">
+          <div class="dropzone-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="18" x2="12" y2="12"/>
+              <line x1="9" y1="15" x2="12" y2="12"/>
+              <line x1="15" y1="15" x2="12" y2="12"/>
+            </svg>
+          </div>
+          <div class="dropzone-title">Drop your encrypted .meshy file here</div>
+          <div class="dropzone-desc">or click to browse from your device</div>
+        </div>
+      </div>
+
+      <!-- Pipeline Progress Status -->
+      <div class="pipeline-card" id="pipelineCard">
+        <div class="pipeline-title">Decryption Pipeline</div>
+        <div class="pipeline-steps">
+          <div class="step-item" id="step1">
+            <div class="step-icon">1</div>
+            <div class="step-desc">Resolving Meshy share link & SSR state...</div>
+          </div>
+          <div class="step-item" id="step2">
+            <div class="step-icon">2</div>
+            <div class="step-desc">Fetching encrypted container (.meshy) from CDN...</div>
+          </div>
+          <div class="step-item" id="step3">
+            <div class="step-icon">3</div>
+            <div class="step-desc">Computing FNV-1a hash signature & authorizing WebAssembly...</div>
+          </div>
+          <div class="step-item" id="step4">
+            <div class="step-icon">4</div>
+            <div class="step-desc">Decrypting geometry buffers & assembling standard .glb...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Banner -->
+      <div class="error-banner" id="errorBanner">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span id="errorMessage">An unexpected error occurred during extraction.</span>
+      </div>
+    </main>
+
+    <!-- Result Showcase Card -->
+    <section class="result-card" id="resultCard">
+      <div class="result-header">
+        <div class="model-info-block">
+          <img src="" alt="Model Thumbnail" id="modelThumb" class="model-thumb">
+          <div class="model-titles">
+            <h3 id="modelTitle">Model Title</h3>
+            <span class="task-id-badge" id="modelTaskId">Task ID: N/A</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Model Stats Chips -->
+      <div class="model-stats-row">
+        <div class="stat-chip">
+          <span class="stat-label">Format</span>
+          <span class="stat-value">glTF 2.0 Binary (.glb)</span>
+        </div>
+        <div class="stat-chip">
+          <span class="stat-label">Decrypted Size</span>
+          <span class="stat-value" id="modelSize">-- MB</span>
+        </div>
+        <div class="stat-chip">
+          <span class="stat-label">Decryption Time</span>
+          <span class="stat-value" id="modelTime">-- s</span>
+        </div>
+        <div class="stat-chip">
+          <span class="stat-label">Textures</span>
+          <span class="stat-value">Embedded WebP / PBR</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-row">
+        <a href="#" id="downloadLink" class="download-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span>Download Raw .GLB Model</span>
+        </a>
+        <button type="button" id="resetBtn" class="reset-btn">Extract Another Model</button>
+      </div>
+
+      <!-- Interactive 3D Model Viewer -->
+      <div class="viewer-wrapper">
+        <model-viewer 
+          id="modelViewer" 
+          src="" 
+          camera-controls 
+          auto-rotate 
+          rotation-per-second="30deg"
+          shadow-intensity="1.2"
+          shadow-softness="0.8"
+          exposure="1.0"
+          interaction-prompt="auto"
+          ar
+        ></model-viewer>
+        
+        <div class="viewer-controls">
+          <button type="button" id="toggleRotateBtn" class="viewer-tool-btn" title="Toggle Auto-Rotation">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="23 4 23 10 17 10"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+            <span id="rotateBtnLabel">Pause Spin</span>
+          </button>
+          <button type="button" id="fullscreenBtn" class="viewer-tool-btn" title="Fullscreen 3D Viewer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+            </svg>
+            <span>Fullscreen</span>
+          </button>
+        </div>
+        <div class="viewer-hint">Click & drag to orbit • Scroll to zoom • Right click to pan</div>
+      </div>
+    </section>
+
+    <!-- Technical Architecture / Explainer -->
+    <section class="explainer-section">
+      <div class="info-card">
+        <div class="info-card-header">
+          <div class="info-card-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
+          <h3>Cryptographic Authorization</h3>
+        </div>
+        <p>Meshy encrypts `.glb` files into `.meshy` containers using WebAssembly. The decrypter requires an authorization signature computed via a 64-bit FNV-1a hash variant coupled with Murmur3 avalanche mixing.</p>
+        <div class="code-snippet">instance.authorize("www.meshy.ai", timestamp, signature);</div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-header">
+          <div class="info-card-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="16 18 22 12 16 6"/>
+              <polyline points="8 6 2 12 8 18"/>
+            </svg>
+          </div>
+          <h3>Full Resolution Reconstruction</h3>
+        </div>
+        <p>Once authorized, the compiled WASM engine decrypts the container in memory. All vertices, normal maps, textures, and PBR materials are restored with 100% fidelity without downsampling or loss.</p>
+        <div class="code-snippet">const glbBuffer = instance.processMeshyFile(encryptedBytes);</div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-header">
+          <div class="info-card-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="4 17 10 11 4 5"/>
+              <line x1="12" y1="19" x2="20" y2="19"/>
+            </svg>
+          </div>
+          <h3>Command-Line Interface</h3>
+        </div>
+        <p>Prefer the terminal or automated batch extraction pipelines? You can also run the built-in CLI directly via Node:</p>
+        <div class="code-snippet">npm run cli https://www.meshy.ai/s/39mTE9 -o model.glb</div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div>Meshy AI 3D Model Extractor • Released under the MIT License</div>
+      <div>Created by <a href="https://github.com/Kabyik-Kayal" target="_blank" rel="noopener noreferrer">Kabyik Kayal</a></div>
+    </footer>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
