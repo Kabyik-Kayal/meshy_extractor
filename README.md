@@ -16,6 +16,7 @@ Features an interactive **3D CAD WebGL viewport**, local `.meshy` file drag-and-
 Meshy AI protects its **shortened redirect routes** (`https://www.meshy.ai/s/...`) with Cloudflare Turnstile bot verification challenges.
 
 If you paste a shortened link and encounter a Cloudflare challenge:
+
 1. Open your shortened share link (`https://www.meshy.ai/s/xyz`) once in any browser tab.
 2. Once the 3D model loads, copy the **full expanded URL** from your browser address bar:
    ```text
@@ -78,14 +79,14 @@ npm run cli encrypted_model.meshy -o decrypted.glb
 
 The server exposes the following REST endpoints:
 
-| Endpoint | Method | Description |
-|---|---|---|
-| `/api/extract` | `POST` | Resolves a share link and returns title, task ID, thumbnail, and signed payload URL. |
-| `/api/process` | `POST` | Fetches the `.meshy` container, runs WASM decryption, caches result, and returns download URL. |
-| `/api/download` | `GET` | Downloads the decrypted `.glb` model directly as an attachment (`Content-Disposition`). |
-| `/api/model-stream` | `GET` | Streams raw `.glb` binary for live 3D WebGL viewers. |
-| `/api/upload-decrypt` | `POST` | Accepts a multipart `.meshy` file upload and returns the decrypted `.glb`. |
-| `/api/health` | `GET` | Server status and uptime health check. |
+| Endpoint                | Method   | Description                                                                                      |
+| ----------------------- | -------- | ------------------------------------------------------------------------------------------------ |
+| `/api/extract`        | `POST` | Resolves a share link and returns title, task ID, thumbnail, and signed payload URL.             |
+| `/api/process`        | `POST` | Fetches the `.meshy` container, runs WASM decryption, caches result, and returns download URL. |
+| `/api/download`       | `GET`  | Downloads the decrypted `.glb` model directly as an attachment (`Content-Disposition`).      |
+| `/api/model-stream`   | `GET`  | Streams raw `.glb` binary for live 3D WebGL viewers.                                           |
+| `/api/upload-decrypt` | `POST` | Accepts a multipart `.meshy` file upload and returns the decrypted `.glb`.                   |
+| `/api/health`         | `GET`  | Server status and uptime health check.                                                           |
 
 ---
 
@@ -115,7 +116,7 @@ When viewing a 3D model on Meshy AI without an active subscription, direct GLB d
          const a = BigInt("0xFFFFFFFFFFFFFFFF");
          const key = "Meshy_Crypto_Key";
          const msg = `${hostname}:${timestamp}`;
-         
+
          for (let i = 0; i < key.length; i++) {
              r ^= BigInt(key.charCodeAt(i));
              r = (r * n) & a;

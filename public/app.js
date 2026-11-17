@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       // Step 1: Resolve metadata
-      setStepActive(step1, 'PHASE: RESOLVING_METADATA');
+      setStepActive(step1, 'Resolving link & metadata...');
       const extractResp = await fetch('/api/extract', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -114,11 +114,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const metadata = extractResult.data;
 
       // Step 2 & 3: Fetching and decrypting
-      setStepActive(step2, 'PHASE: FETCHING_CDN_STREAM');
+      setStepActive(step2, 'Downloading model container...');
       await delay(200);
       setStepDone(step2);
 
-      setStepActive(step3, 'PHASE: WASM_DECRYPTION');
+      setStepActive(step3, 'Decrypting with WebAssembly...');
       const processResp = await fetch('/api/process', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -137,10 +137,10 @@ document.addEventListener('DOMContentLoaded', () => {
       setStepDone(step3);
 
       // Step 4: Finalize GLB
-      setStepActive(step4, 'PHASE: SYNTHESIZING_GLTF');
+      setStepActive(step4, 'Reconstructing 3D model...');
       await delay(150);
       setStepDone(step4);
-      pipelinePhase.textContent = 'PHASE: COMPLETE';
+      pipelinePhase.textContent = 'Complete';
 
       // Display Result
       displayResult({
@@ -190,14 +190,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function handleLocalFileUpload(file) {
     if (!file.name.toLowerCase().endsWith('.meshy')) {
-      showError('INVALID_FORMAT: File must carry .meshy container extension.');
+      showError('Please upload a file with the .meshy extension.');
       return;
     }
 
     hideError();
     resultCard.style.display = 'none';
     startPipeline();
-    setStepActive(step1, 'PHASE: READING_LOCAL_FILE');
+    setStepActive(step1, 'Reading file...');
     step1.querySelector('.log-desc').textContent = `Reading local file: ${file.name}...`;
 
     try {
@@ -205,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
       formData.append('meshyFile', file);
 
       setStepDone(step1);
-      setStepActive(step3, 'PHASE: WASM_CORE_DECRYPTION');
+      setStepActive(step3, 'Decrypting file...');
       step3.querySelector('.log-desc').textContent = 'Executing WebAssembly decrypter engine...';
 
       const resp = await fetch('/api/upload-decrypt', {
@@ -219,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       setStepDone(step3);
-      setStepActive(step4, 'PHASE: RECONSTRUCTING_GEOMETRY');
+      setStepActive(step4, 'Reconstructing model...');
 
       const blob = await resp.blob();
       if (currentBlobUrl) {
@@ -228,14 +228,14 @@ document.addEventListener('DOMContentLoaded', () => {
       currentBlobUrl = URL.createObjectURL(blob);
 
       setStepDone(step4);
-      pipelinePhase.textContent = 'PHASE: COMPLETE';
+      pipelinePhase.textContent = 'Complete';
 
       const baseName = file.name.replace(/\.meshy$/i, '');
       const glbName = `${baseName}.glb`;
 
       displayResult({
         title: baseName,
-        taskId: 'LOCAL_UPLOAD',
+        taskId: null,
         previewUrl: null,
         sizeFormatted: (blob.size / (1024 * 1024)).toFixed(2) + ' MB',
         decryptionTimeSec: '< 0.2',
@@ -254,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Display Result Showcase ---
   function displayResult(data) {
     modelTitle.textContent = data.title || 'Meshy 3D Model';
-    modelTaskId.textContent = data.taskId ? `TASK_ID: ${data.taskId}` : 'TASK_ID: VERIFIED';
+    modelTaskId.textContent = data.taskId ? `Task ID: ${data.taskId}` : '';
     modelSize.textContent = data.sizeFormatted || '-- MB';
     modelTime.textContent = (data.decryptionTimeSec ? `${data.decryptionTimeSec}s` : '0.18s');
 
@@ -273,7 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
       downloadLink.removeAttribute('download');
     }
 
-    // Load CAD 3D Viewport
+    // Load 3D Viewport
     if (data.streamUrl) {
       modelViewer.src = data.streamUrl;
       modelViewer.setAttribute('alt', data.title || 'Decrypted 3D Asset');
@@ -282,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
     pipelineCard.style.display = 'none';
     resultCard.style.display = 'block';
 
-    // Smooth scroll to workbench results
+    // Smooth scroll to results
     resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
@@ -303,10 +303,10 @@ document.addEventListener('DOMContentLoaded', () => {
   toggleRotateBtn.addEventListener('click', () => {
     if (modelViewer.autoRotate) {
       modelViewer.autoRotate = false;
-      rotateBtnLabel.textContent = '[SPIN: OFF]';
+      rotateBtnLabel.textContent = 'Auto-Rotate';
     } else {
       modelViewer.autoRotate = true;
-      rotateBtnLabel.textContent = '[SPIN: ON]';
+      rotateBtnLabel.textContent = 'Pause Spin';
     }
   });
 
@@ -322,7 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Pipeline Status Helpers ---
   function startPipeline() {
     pipelineCard.style.display = 'block';
-    pipelinePhase.textContent = 'PHASE: INITIALIZING';
+    pipelinePhase.textContent = 'Starting...';
     [step1, step2, step3, step4].forEach(s => {
       s.className = 'log-entry';
       s.querySelector('.log-status-indicator').textContent = s.id.replace('step', '');
@@ -346,9 +346,9 @@ document.addEventListener('DOMContentLoaded', () => {
     extractBtn.disabled = isLoading;
     const btnText = extractBtn.querySelector('.btn-text');
     if (isLoading) {
-      btnText.textContent = 'PROCESSING...';
+      btnText.textContent = 'Extracting...';
     } else {
-      btnText.textContent = 'INITIALIZE DECRYPTION';
+      btnText.textContent = 'Extract Model';
     }
   }
 
