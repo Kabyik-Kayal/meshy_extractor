@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const fileInput = document.getElementById('fileInput');
 
   const pipelineCard = document.getElementById('pipelineCard');
+  const pipelinePhase = document.getElementById('pipelinePhase');
   const step1 = document.getElementById('step1');
   const step2 = document.getElementById('step2');
   const step3 = document.getElementById('step3');
@@ -38,6 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const fullscreenBtn = document.getElementById('fullscreenBtn');
 
   let currentBlobUrl = null;
+
+  // Canonical full URL sample (bypasses Cloudflare redirect challenges)
+  const CANONICAL_SAMPLE_URL = 'https://www.meshy.ai/3d-models/Distinguished-Gentleman-01a16e9a-db8e-7603-9676-7e03390faac9';
 
   // --- Tab Navigation ---
   tabLinkBtn.addEventListener('click', () => switchTab('link'));
@@ -73,10 +77,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- Sample Link Button ---
+  // --- Sample Link Shortcut ---
   if (sampleBtn) {
     sampleBtn.addEventListener('click', () => {
-      urlInput.value = 'https://www.meshy.ai/s/39mTE9';
+      urlInput.value = CANONICAL_SAMPLE_URL;
       extractForm.dispatchEvent(new Event('submit'));
     });
   }
@@ -94,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       // Step 1: Resolve metadata
-      setStepActive(step1);
+      setStepActive(step1, 'PHASE: RESOLVING_METADATA');
       const extractResp = await fetch('/api/extract', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -110,11 +114,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const metadata = extractResult.data;
 
       // Step 2 & 3: Fetching and decrypting
-      setStepActive(step2);
+      setStepActive(step2, 'PHASE: FETCHING_CDN_STREAM');
       await delay(200);
       setStepDone(step2);
 
-      setStepActive(step3);
+      setStepActive(step3, 'PHASE: WASM_DECRYPTION');
       const processResp = await fetch('/api/process', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -132,10 +136,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       setStepDone(step3);
 
-      // Step 4: Assembling GLB & Loading
-      setStepActive(step4);
-      await delay(200);
+      // Step 4: Finalize GLB
+      setStepActive(step4, 'PHASE: SYNTHESIZING_GLTF');
+      await delay(150);
       setStepDone(step4);
+      pipelinePhase.textContent = 'PHASE: COMPLETE';
 
       // Display Result
       displayResult({
@@ -150,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (err) {
       console.error(err);
-      showError(err.message || 'An error occurred while processing the 3D model.');
+      showError(err.message || 'An error occurred during extraction.');
       pipelineCard.style.display = 'none';
     } finally {
       setExtractLoading(false);
@@ -185,23 +190,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function handleLocalFileUpload(file) {
     if (!file.name.toLowerCase().endsWith('.meshy')) {
-      showError('Please upload a file with the .meshy extension.');
+      showError('INVALID_FORMAT: File must carry .meshy container extension.');
       return;
     }
 
     hideError();
     resultCard.style.display = 'none';
     startPipeline();
-    setStepActive(step1);
-    step1.querySelector('.step-desc').textContent = `Reading local file: ${file.name}...`;
+    setStepActive(step1, 'PHASE: READING_LOCAL_FILE');
+    step1.querySelector('.log-desc').textContent = `Reading local file: ${file.name}...`;
 
     try {
       const formData = new FormData();
       formData.append('meshyFile', file);
 
       setStepDone(step1);
-      setStepActive(step3);
-      step3.querySelector('.step-desc').textContent = 'Decrypting file via WebAssembly engine...';
+      setStepActive(step3, 'PHASE: WASM_CORE_DECRYPTION');
+      step3.querySelector('.log-desc').textContent = 'Executing WebAssembly decrypter engine...';
 
       const resp = await fetch('/api/upload-decrypt', {
         method: 'POST',
@@ -214,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       setStepDone(step3);
-      setStepActive(step4);
+      setStepActive(step4, 'PHASE: RECONSTRUCTING_GEOMETRY');
 
       const blob = await resp.blob();
       if (currentBlobUrl) {
@@ -223,16 +228,17 @@ document.addEventListener('DOMContentLoaded', () => {
       currentBlobUrl = URL.createObjectURL(blob);
 
       setStepDone(step4);
+      pipelinePhase.textContent = 'PHASE: COMPLETE';
 
       const baseName = file.name.replace(/\.meshy$/i, '');
       const glbName = `${baseName}.glb`;
 
       displayResult({
         title: baseName,
-        taskId: 'Local Upload',
+        taskId: 'LOCAL_UPLOAD',
         previewUrl: null,
         sizeFormatted: (blob.size / (1024 * 1024)).toFixed(2) + ' MB',
-        decryptionTimeSec: '< 0.5',
+        decryptionTimeSec: '< 0.2',
         downloadUrl: currentBlobUrl,
         downloadFilename: glbName,
         streamUrl: currentBlobUrl
@@ -240,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (err) {
       console.error(err);
-      showError(err.message || 'Failed to decrypt local .meshy file.');
+      showError(err.message || 'Failed to decrypt local container.');
       pipelineCard.style.display = 'none';
     }
   }
@@ -248,9 +254,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Display Result Showcase ---
   function displayResult(data) {
     modelTitle.textContent = data.title || 'Meshy 3D Model';
-    modelTaskId.textContent = data.taskId ? `Task ID: ${data.taskId}` : 'Task ID: Verified';
+    modelTaskId.textContent = data.taskId ? `TASK_ID: ${data.taskId}` : 'TASK_ID: VERIFIED';
     modelSize.textContent = data.sizeFormatted || '-- MB';
-    modelTime.textContent = (data.decryptionTimeSec ? `${data.decryptionTimeSec}s` : '0.2s');
+    modelTime.textContent = (data.decryptionTimeSec ? `${data.decryptionTimeSec}s` : '0.18s');
 
     if (data.previewUrl) {
       modelThumb.src = data.previewUrl;
@@ -267,16 +273,16 @@ document.addEventListener('DOMContentLoaded', () => {
       downloadLink.removeAttribute('download');
     }
 
-    // Load 3D Viewer
+    // Load CAD 3D Viewport
     if (data.streamUrl) {
       modelViewer.src = data.streamUrl;
-      modelViewer.setAttribute('alt', data.title || 'Decrypted 3D Model');
+      modelViewer.setAttribute('alt', data.title || 'Decrypted 3D Asset');
     }
 
     pipelineCard.style.display = 'none';
     resultCard.style.display = 'block';
 
-    // Smooth scroll to result card
+    // Smooth scroll to workbench results
     resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
@@ -293,51 +299,56 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // --- 3D Viewer Controls ---
+  // --- 3D Viewport Controls ---
   toggleRotateBtn.addEventListener('click', () => {
     if (modelViewer.autoRotate) {
       modelViewer.autoRotate = false;
-      rotateBtnLabel.textContent = 'Auto-Spin';
+      rotateBtnLabel.textContent = '[SPIN: OFF]';
     } else {
       modelViewer.autoRotate = true;
-      rotateBtnLabel.textContent = 'Pause Spin';
+      rotateBtnLabel.textContent = '[SPIN: ON]';
     }
   });
 
   fullscreenBtn.addEventListener('click', () => {
-    const viewerContainer = document.querySelector('.viewer-wrapper');
+    const viewportContainer = document.querySelector('.cad-viewport-housing');
     if (!document.fullscreenElement) {
-      viewerContainer.requestFullscreen().catch(console.error);
+      viewportContainer.requestFullscreen().catch(console.error);
     } else {
       document.exitFullscreen().catch(console.error);
     }
   });
 
-  // --- Pipeline Helpers ---
+  // --- Pipeline Status Helpers ---
   function startPipeline() {
     pipelineCard.style.display = 'block';
+    pipelinePhase.textContent = 'PHASE: INITIALIZING';
     [step1, step2, step3, step4].forEach(s => {
-      s.className = 'step-item';
-      s.querySelector('.step-icon').textContent = s.id.replace('step', '');
+      s.className = 'log-entry';
+      s.querySelector('.log-status-indicator').textContent = s.id.replace('step', '');
     });
   }
 
-  function setStepActive(stepEl) {
-    stepEl.className = 'step-item active';
-    stepEl.querySelector('.step-icon').innerHTML = '<div class="spinner"></div>';
+  function setStepActive(stepEl, phaseText) {
+    stepEl.className = 'log-entry active';
+    stepEl.querySelector('.log-status-indicator').innerHTML = '<div class="mini-spinner"></div>';
+    if (phaseText) {
+      pipelinePhase.textContent = phaseText;
+    }
   }
 
   function setStepDone(stepEl) {
-    stepEl.className = 'step-item done';
-    stepEl.querySelector('.step-icon').innerHTML = '✓';
+    stepEl.className = 'log-entry done';
+    stepEl.querySelector('.log-status-indicator').innerHTML = '✓';
   }
 
   function setExtractLoading(isLoading) {
     extractBtn.disabled = isLoading;
+    const btnText = extractBtn.querySelector('.btn-text');
     if (isLoading) {
-      extractBtn.querySelector('.btn-text').textContent = 'Decrypting...';
+      btnText.textContent = 'PROCESSING...';
     } else {
-      extractBtn.querySelector('.btn-text').textContent = 'Extract & Decrypt Model';
+      btnText.textContent = 'INITIALIZE DECRYPTION';
     }
   }
 
