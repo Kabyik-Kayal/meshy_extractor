@@ -7,15 +7,29 @@
 
 An open-source web application and high-performance CLI tool to **extract, decrypt, and download raw, uncompressed 3D models (`.glb`) from any public Meshy AI shareable link**.
 
-Features an interactive **3D WebGL model previewer**, local `.meshy` file drag-and-drop support, and zero-loss geometry reconstruction with full PBR textures.
+Features an interactive **3D CAD WebGL viewport**, local `.meshy` file drag-and-drop decryption, and zero-loss geometry reconstruction with full PBR textures.
+
+---
+
+## ⚠️ Important: Bypassing Cloudflare Bot Challenges
+
+Meshy AI protects its **shortened redirect routes** (`https://www.meshy.ai/s/...`) with Cloudflare Turnstile bot verification challenges.
+
+If you paste a shortened link and encounter a Cloudflare challenge:
+1. Open your shortened share link (`https://www.meshy.ai/s/xyz`) once in any browser tab.
+2. Once the 3D model loads, copy the **full expanded URL** from your browser address bar:
+   ```text
+   https://www.meshy.ai/3d-models/<Model-Name>-<Task-ID>
+   ```
+3. Paste that full canonical URL into the web application or CLI. Full model URLs load directly without triggering Cloudflare challenges.
 
 ---
 
 ## ✨ Features
 
-- 🌐 **Modern Web Interface**: Paste any shareable link (e.g. `https://www.meshy.ai/s/39mTE9`) to decrypt and download in seconds.
-- 🎮 **Interactive 3D Preview**: Spin, pan, and inspect the decrypted 3D model directly in the browser with Google `<model-viewer>`.
-- 📁 **Offline File Decryption**: Drag and drop any locally downloaded `.meshy` container to unlock it into a `.glb`.
+- 🛠️ **Technical CAD Workbench UI**: Precision industrial design system with zero generic gradients, featuring high-density telemetry readouts and monospace data feeds.
+- 🎮 **Interactive 3D Viewport**: Orbit, pan, zoom, toggle auto-rotation, and inspect the decrypted 3D model in full 3D with Google `<model-viewer>`.
+- 📁 **Offline File Decryption**: Drag and drop any locally downloaded `.meshy` container to unlock it into a standard `.glb`.
 - ⚡ **WebAssembly Crypto Engine**: Decrypts in <0.2 seconds in memory without quality loss or geometry downsampling.
 - 🎨 **Full PBR Texture Preservation**: Restores high-resolution WebP diffuse, normal, and roughness maps embedded in standard glTF 2.0 binary.
 - 💻 **Dedicated CLI**: Terminal command support for batch extraction and automated asset pipelines.
@@ -48,11 +62,11 @@ Visit **`http://localhost:3000`** in your browser.
 You can also run the extractor directly from your command line:
 
 ```bash
-# Using npm script:
-npm run cli https://www.meshy.ai/s/39mTE9
+# Using npm script with full canonical URL (Recommended):
+npm run cli https://www.meshy.ai/3d-models/Distinguished-Gentleman-01a16e9a-db8e-7603-9676-7e03390faac9
 
 # With a custom output filename:
-npm run cli https://www.meshy.ai/s/39mTE9 -o my_model.glb
+npm run cli https://www.meshy.ai/3d-models/Distinguished-Gentleman-01a16e9a-db8e-7603-9676-7e03390faac9 -o my_model.glb
 
 # Directly decrypt a local .meshy file:
 npm run cli encrypted_model.meshy -o decrypted.glb
@@ -64,14 +78,14 @@ npm run cli encrypted_model.meshy -o decrypted.glb
 
 The server exposes the following REST endpoints:
 
-| Endpoint                | Method   | Description                                                                                      |
-| ----------------------- | -------- | ------------------------------------------------------------------------------------------------ |
-| `/api/extract`        | `POST` | Resolves a share link and returns title, task ID, thumbnail, and signed payload URL.             |
-| `/api/process`        | `POST` | Fetches the `.meshy` container, runs WASM decryption, caches result, and returns download URL. |
-| `/api/download`       | `GET`  | Downloads the decrypted `.glb` model directly as an attachment (`Content-Disposition`).      |
-| `/api/model-stream`   | `GET`  | Streams raw `.glb` binary for live 3D WebGL viewers.                                           |
-| `/api/upload-decrypt` | `POST` | Accepts a multipart `.meshy` file upload and returns the decrypted `.glb`.                   |
-| `/api/health`         | `GET`  | Server status and uptime health check.                                                           |
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/extract` | `POST` | Resolves a share link and returns title, task ID, thumbnail, and signed payload URL. |
+| `/api/process` | `POST` | Fetches the `.meshy` container, runs WASM decryption, caches result, and returns download URL. |
+| `/api/download` | `GET` | Downloads the decrypted `.glb` model directly as an attachment (`Content-Disposition`). |
+| `/api/model-stream` | `GET` | Streams raw `.glb` binary for live 3D WebGL viewers. |
+| `/api/upload-decrypt` | `POST` | Accepts a multipart `.meshy` file upload and returns the decrypted `.glb`. |
+| `/api/health` | `GET` | Server status and uptime health check. |
 
 ---
 
@@ -82,7 +96,7 @@ When viewing a 3D model on Meshy AI without an active subscription, direct GLB d
 ### The Delivery Pipeline
 
 1. **Next.js SSR Hydration**:
-   - When a shared URL like `https://www.meshy.ai/s/39mTE9` is loaded, the HTML contains a server-rendered React state containing task metadata and a signed CDN URL:
+   - When a shared URL like `https://www.meshy.ai/3d-models/...` is loaded, the HTML contains a server-rendered React state containing task metadata and a signed CDN URL:
      ```text
      https://api.meshy.ai/misc/cdn-models/.../tasks/<TASK_ID>/output/model.meshy?sign=<TIMESTAMP>-<HMAC>
      ```
@@ -101,7 +115,7 @@ When viewing a 3D model on Meshy AI without an active subscription, direct GLB d
          const a = BigInt("0xFFFFFFFFFFFFFFFF");
          const key = "Meshy_Crypto_Key";
          const msg = `${hostname}:${timestamp}`;
-
+         
          for (let i = 0; i < key.length; i++) {
              r ^= BigInt(key.charCodeAt(i));
              r = (r * n) & a;
@@ -135,15 +149,16 @@ meshy_extractor/
 │   ├── decrypter.mjs        # WebAssembly decryption logic & signature computation
 │   └── extractor.mjs        # Share link resolver, metadata parser & CDN fetcher
 ├── public/
-│   ├── index.html           # Modern dark-mode web application UI
-│   ├── style.css            # Glassmorphism styling and responsive layout
-│   ├── app.js               # Frontend controller, 3D viewer & upload handling
-│   └── favicon.svg          # 3D isometric cube logo
+│   ├── index.html           # Technical CAD workbench UI
+│   ├── style.css            # Industrial styling, high-density telemetry & layout
+│   ├── app.js               # Frontend controller, 3D viewport & upload handling
+│   └── favicon.svg          # Precision isometric wireframe logo
 ├── extract_meshy.mjs        # Command-line extractor tool
 ├── mesh_loader.js           # Emscripten WASM runtime glue
 ├── mesh_loader.wasm         # Compiled WebAssembly crypto engine
 ├── server.mjs               # Express API and web server
 ├── package.json             # Scripts and dependencies
+├── render.yaml              # Render 1-click blueprint specification
 └── README.md                # Documentation and protocol guide
 ```
 
