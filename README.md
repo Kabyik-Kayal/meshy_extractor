@@ -4,6 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-20%2B-green.svg?style=flat)](https://nodejs.org)
 [![glTF 2.0](https://img.shields.io/badge/Output-glTF_2.0_.glb-blue.svg?style=flat)](https://www.khronos.org/gltf/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat)](https://opensource.org/licenses/MIT)
+[![Sponsor](https://img.shields.io/badge/Sponsor-GitHub_Sponsors-ea4aaa.svg?style=flat)](https://github.com/sponsors/Kabyik-Kayal)
 
 A utility and web application to extract and decrypt glTF 2.0 (`.glb`) 3D assets from Meshy shareable links and local `.meshy` encrypted archives.
 
