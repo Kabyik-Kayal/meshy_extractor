@@ -1,36 +1,35 @@
-# Meshy AI 3D Model Extractor & Decrypter 🧊
+# Meshy 3D Model Extractor
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-meshy--model.onrender.com-f97316?style=for-the-badge&logo=render&logoColor=white)](https://meshy-model.onrender.com/)
-[![Node.js](https://img.shields.io/badge/Node.js-20%2B-22c55e.svg?style=flat)](https://nodejs.org)
-[![WebAssembly](https://img.shields.io/badge/Engine-WebAssembly-blueviolet.svg?style=flat)](https://webassembly.org/)
-[![3D: glTF 2.0](https://img.shields.io/badge/3D_Format-glTF_2.0_.glb-06b6d4.svg?style=flat)](https://www.khronos.org/gltf/)
+[![Live Demo](https://img.shields.io/badge/Demo-meshy--model.onrender.com-blue?style=flat)](https://meshy-model.onrender.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-20%2B-green.svg?style=flat)](https://nodejs.org)
+[![glTF 2.0](https://img.shields.io/badge/Output-glTF_2.0_.glb-blue.svg?style=flat)](https://www.khronos.org/gltf/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat)](https://opensource.org/licenses/MIT)
 
-An open-source web application and high-performance CLI tool to **extract, decrypt, and download raw, uncompressed 3D models (`.glb`) from any public Meshy AI shareable link**.
+A utility and web application to extract and decrypt glTF 2.0 (`.glb`) 3D assets from Meshy shareable links and local `.meshy` encrypted archives.
 
-Features an interactive **3D CAD WebGL viewport**, local `.meshy` file drag-and-drop decryption, and zero-loss geometry reconstruction with full PBR textures.
-
-🌐 **Live Deployed Web App:** [https://meshy-model.onrender.com](https://meshy-model.onrender.com/)
+Live deployment: [https://meshy-model.onrender.com](https://meshy-model.onrender.com)
 
 ---
 
-## ✨ Features
+## Features
 
-- 🌐 **Live Web Application**: Hosted and ready to use at [meshy-model.onrender.com](https://meshy-model.onrender.com/).
-- 🔗 **Dual Link Support**: Seamlessly extracts from full canonical URLs (`/3d-models/...`) and shortened links (`/s/...`) with automated Next.js RSC protocol bypass.
-- 🛠️ **Technical CAD Workbench UI**: Precision industrial design system with zero generic gradients, featuring high-density telemetry readouts and monospace data feeds.
-- 🎮 **Interactive 3D Viewport**: Orbit, pan, zoom, toggle auto-rotation, and inspect the decrypted 3D model in full 3D with Google `<model-viewer>`.
-- 📁 **Offline File Decryption**: Drag and drop any locally downloaded `.meshy` container to unlock it into a standard `.glb`.
-- ⚡ **WebAssembly Crypto Engine**: Decrypts in <0.2 seconds in memory without quality loss or geometry downsampling.
-- 🎨 **Full PBR Texture Preservation**: Restores high-resolution WebP diffuse, normal, and roughness maps embedded in standard glTF 2.0 binary.
-- 💻 **Dedicated CLI**: Terminal command support for batch extraction and automated asset pipelines.
-- 🚀 **REST API**: Simple endpoints for metadata extraction, streaming, and direct attachment downloads.
+- **Link Resolution**: Resolves both canonical URLs (`https://www.meshy.ai/3d-models/...`) and shortened links (`https://www.meshy.ai/s/...`).
+- **In-Memory Decryption**: Decrypts `.meshy` binary containers into glTF 2.0 models using an Emscripten-compiled WebAssembly runtime.
+- **Web Interface**: Browser-based UI with interactive 3D model inspection (via `<model-viewer>`) and local file upload support.
+- **CLI Utility**: Command-line tool for headless model extraction and batch scripting.
+- **REST API**: HTTP endpoints for metadata extraction, decryption, caching, and asset streaming.
+- **Asset Preservation**: Preserves embedded geometry, UV layouts, and PBR textures (base color, metallic, roughness, and normal maps).
 
 ---
 
-## 🚀 Quick Start (Local Development)
+## Installation
 
-### 1. Clone & Install Dependencies
+### Prerequisites
+
+- Node.js 18.0.0 or higher
+- npm 9.0.0 or higher
+
+### Setup
 
 ```bash
 git clone https://github.com/Kabyik-Kayal/meshy_extractor.git
@@ -38,135 +37,138 @@ cd meshy_extractor
 npm install
 ```
 
-### 2. Launch the Web Server
+---
+
+## Usage
+
+### Web Interface
+
+Start the local server:
 
 ```bash
 npm start
 ```
 
-Visit **`http://localhost:3000`** in your browser.
+Open `http://localhost:3000` in your browser.
 
----
+### Command Line (CLI)
 
-## 💻 CLI Usage
-
-You can also run the extractor directly from your command line:
+Extract a model directly using a share link:
 
 ```bash
-# Using npm script with full canonical URL (Recommended):
-npm run cli "https://www.meshy.ai/3d-models/Bullet-Rain-01a1e9b4-e914-77de-9458-b6625dea4cd6?utm_medium=referral-program&utm_source=meshy&utm_content=BBDLCQ&share_type=3d-models"
+node extract_meshy.mjs "https://www.meshy.ai/3d-models/Bullet-Rain-01a1e9b4-e914-77de-9458-b6625dea4cd6?utm_medium=referral-program&utm_source=meshy&utm_content=BBDLCQ&share_type=3d-models"
+```
 
-# With a custom output filename:
-npm run cli "https://www.meshy.ai/3d-models/Bullet-Rain-01a1e9b4-e914-77de-9458-b6625dea4cd6?utm_medium=referral-program&utm_source=meshy&utm_content=BBDLCQ&share_type=3d-models" -o bullet_rain.glb
+Save with a custom output filename:
 
-# Directly decrypt a local .meshy file:
-npm run cli encrypted_model.meshy -o decrypted.glb
+```bash
+node extract_meshy.mjs "https://www.meshy.ai/s/39mTE9" -o output_model.glb
+```
+
+Decrypt a previously downloaded `.meshy` file:
+
+```bash
+node extract_meshy.mjs path/to/model.meshy -o decrypted.glb
 ```
 
 ---
 
-## 📡 REST API Reference
+## API Reference
 
-The server exposes the following REST endpoints:
+The Express server exposes the following HTTP endpoints:
 
-| Endpoint | Method | Description |
-|---|---|---|
-| `/api/extract` | `POST` | Resolves a share link and returns title, task ID, thumbnail, and signed payload URL. |
-| `/api/process` | `POST` | Fetches the `.meshy` container, runs WASM decryption, caches result, and returns download URL. |
-| `/api/download` | `GET` | Downloads the decrypted `.glb` model directly as an attachment (`Content-Disposition`). |
-| `/api/model-stream` | `GET` | Streams raw `.glb` binary for live 3D WebGL viewers. |
-| `/api/upload-decrypt` | `POST` | Accepts a multipart `.meshy` file upload and returns the decrypted `.glb`. |
-| `/api/health` | `GET` | Server status and uptime health check. |
-
----
-
-## ☁️ Deployment
-
-The application is deployed on **[Render](https://render.com)** at [https://meshy-model.onrender.com](https://meshy-model.onrender.com/).
-
-To deploy your own instance:
-1. Connect your GitHub repository to Render as a **Web Service**.
-2. Set Build Command: `npm install` and Start Command: `npm start`.
-3. Or deploy via 1-click Blueprint using the included [`render.yaml`](render.yaml).
+| Endpoint | Method | Parameters | Description |
+|---|---|---|---|
+| `/api/extract` | `POST` | `{ "url": string }` | Resolves a share link and returns title, task ID, thumbnail, and signed model URL. |
+| `/api/process` | `POST` | `{ "url": string }` or `{ "modelUrl": string }` | Downloads the encrypted archive, decrypts it to GLB in memory, and caches the result. |
+| `/api/download` | `GET` | `?modelUrl=...&name=...` | Returns the decrypted `.glb` file as an attachment (`Content-Disposition`). |
+| `/api/model-stream` | `GET` | `?modelUrl=...` | Streams the decrypted `.glb` binary (used by 3D viewports). |
+| `/api/upload-decrypt` | `POST` | `multipart/form-data` (`file`) | Decrypts an uploaded `.meshy` file and returns the binary `.glb`. |
+| `/api/health` | `GET` | None | Returns service status and uptime timestamp. |
 
 ---
 
-## 🔍 How Meshy AI Share Links Work
+## Technical Details
 
-When viewing a 3D model on Meshy AI without an active subscription, direct GLB downloads are blocked in the web UI. Instead, the model is streamed to the browser using an encrypted container format with a `.meshy` extension.
+### Asset Delivery Mechanism
 
-### The Delivery Pipeline
+When viewing a model on Meshy, 3D assets are delivered inside an encrypted archive format with a `.meshy` extension rather than a plain `.glb` file.
 
-1. **Next.js SSR Hydration**:
-   - When a shared URL like `https://www.meshy.ai/3d-models/...` is loaded, the HTML contains a server-rendered React state containing task metadata and a signed CDN URL:
-     ```text
-     https://api.meshy.ai/misc/cdn-models/.../tasks/<TASK_ID>/output/model.meshy?sign=<TIMESTAMP>-<HMAC>
-     ```
-2. **Encrypted Payload (`model.meshy`)**:
-   - The `.meshy` file is an encrypted binary blob containing the full glTF 2.0 geometry, embedded WebP texture maps, and PBR materials.
-3. **WebAssembly Decrypter Engine**:
-   - The browser loads `mesh_loader.js` and `mesh_loader.wasm`.
-   - Before decrypting, the WASM engine requires an **authorization token** computed via a client-side hashing routine using the internal key `"Meshy_Crypto_Key"`.
-4. **Client-Side Authorization Signature**:
-   - The signature is calculated by combining the hostname (`"www.meshy.ai"`) and the current millisecond timestamp (`Date.now()`).
-   - The algorithm is a 64-bit FNV-1a hash variant coupled with a 64-bit Murmur3 avalanche finalizer:
-     ```javascript
-     function computeSignature(hostname, timestamp) {
-         let r = BigInt("14695981039346656037");
-         const n = BigInt("1099511628211");
-         const a = BigInt("0xFFFFFFFFFFFFFFFF");
-         const key = "Meshy_Crypto_Key";
-         const msg = `${hostname}:${timestamp}`;
+1. **Metadata Hydration**:
+   Public model pages load state via Next.js React Server Component (RSC) streams. The serialized state contains the signed CDN URL for the asset:
+   ```text
+   https://api.meshy.ai/misc/cdn-models/.../tasks/<TASK_ID>/output/model.meshy?sign=<TIMESTAMP>-<HMAC>
+   ```
 
-         for (let i = 0; i < key.length; i++) {
-             r ^= BigInt(key.charCodeAt(i));
-             r = (r * n) & a;
-         }
-         for (let i = 0; i < msg.length; i++) {
-             r ^= BigInt(msg.charCodeAt(i));
-             r = (r * n) & a;
-         }
-         r ^= r >> BigInt(33);
-         r = (r * BigInt("0xff51afd7ed558ccd")) & a;
-         r ^= r >> BigInt(33);
-         r = (r * BigInt("0xc4ceb9fe1a85ec53")) & a;
-         r ^= r >> BigInt(33);
-         return r.toString(16).padStart(16, "0");
-     }
-     ```
-5. **Decryption Execution**:
-   - The engine is unlocked via:
-     ```javascript
-     instance.authorize("www.meshy.ai", timestamp, signature);
-     ```
-   - Once authorized, calling `instance.processMeshyFile(uint8EncryptedBuffer)` decrypts the container in memory and returns a standard, unencrypted `.glb` file.
+2. **Authorization Handshake**:
+   The WebAssembly module (`mesh_loader.wasm`) requires an authorization signature before it permits decryption. The signature is derived from a 64-bit FNV-1a hash followed by a 64-bit Murmur3 avalanche finalizer using the internal key `"Meshy_Crypto_Key"`:
+
+   ```javascript
+   function computeSignature(hostname, timestamp) {
+       let r = BigInt("14695981039346656037");
+       const n = BigInt("1099511628211");
+       const a = BigInt("0xFFFFFFFFFFFFFFFF");
+       const key = "Meshy_Crypto_Key";
+       const msg = `${hostname}:${timestamp}`;
+
+       for (let i = 0; i < key.length; i++) {
+           r ^= BigInt(key.charCodeAt(i));
+           r = (r * n) & a;
+       }
+       for (let i = 0; i < msg.length; i++) {
+           r ^= BigInt(msg.charCodeAt(i));
+           r = (r * n) & a;
+       }
+       r ^= r >> BigInt(33);
+       r = (r * BigInt("0xff51afd7ed558ccd")) & a;
+       r ^= r >> BigInt(33);
+       r = (r * BigInt("0xc4ceb9fe1a85ec53")) & a;
+       r ^= r >> BigInt(33);
+       return r.toString(16).padStart(16, "0");
+   }
+   ```
+
+3. **Decryption**:
+   Once authorized via `instance.authorize("www.meshy.ai", timestamp, signature)`, the module invokes `instance.processMeshyFile(buffer)`, returning the unpacked glTF 2.0 binary.
 
 ---
 
-## 🛠️ Project Structure
+## Deployment
+
+The project includes configuration for deployment on [Render](https://render.com).
+
+1. Connect your repository to Render as a **Web Service**.
+2. Configure settings:
+   - **Environment**: `Node`
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+3. Alternatively, deploy using the included [`render.yaml`](render.yaml) blueprint.
+
+---
+
+## Directory Layout
 
 ```
 meshy_extractor/
 ├── lib/
-│   ├── decrypter.mjs        # WebAssembly decryption logic & signature computation
-│   └── extractor.mjs        # Share link resolver, metadata parser & CDN fetcher
+│   ├── decrypter.mjs        # WebAssembly runtime glue and crypto authorization
+│   └── extractor.mjs        # URL resolver, metadata parser, and CDN fetcher
 ├── public/
-│   ├── index.html           # Technical CAD workbench UI
-│   ├── style.css            # Industrial styling, high-density telemetry & layout
-│   ├── app.js               # Frontend controller, 3D viewport & upload handling
-│   └── favicon.svg          # Precision isometric wireframe logo
-├── extract_meshy.mjs        # Command-line extractor tool
-├── mesh_loader.js           # Emscripten WASM runtime glue
-├── mesh_loader.wasm         # Compiled WebAssembly crypto engine
-├── server.mjs               # Express API and web server
-├── package.json             # Scripts and dependencies
-├── render.yaml              # Render 1-click blueprint specification
-└── README.md                # Documentation and protocol guide
+│   ├── index.html           # Web application markup
+│   ├── style.css            # Stylesheet
+│   ├── app.js               # Client-side controller and 3D viewer binding
+│   └── favicon.svg          # Application icon
+├── extract_meshy.mjs        # Command-line interface
+├── mesh_loader.js           # Emscripten runtime module
+├── mesh_loader.wasm         # WebAssembly decryption binary
+├── server.mjs               # Express application and API routes
+├── package.json             # Package configuration and dependencies
+├── render.yaml              # Render deployment specification
+└── README.md                # Project documentation
 ```
 
 ---
 
-## ⚖️ License
+## License
 
 This project is licensed under the [MIT License](LICENSE).
-For educational and interoperability research purposes.
