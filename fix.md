@@ -1,125 +1,125 @@
-# Technical Remediation Guide: Securing Web-Delivered 3D Assets
+# Architectural Advisory: Securing Web-Delivered 3D Assets
 
 ## 1. Executive Summary
 
-This document provides a technical remediation architecture for securing web-delivered 3D assets on platforms utilizing client-side WebAssembly loaders. 
+This document outlines architectural recommendations for securing proprietary 3D assets delivered to web browsers via WebAssembly runtimes.
 
-The current vulnerability allows unauthenticated users to extract full-resolution glTF 2.0 (`.glb`) models and high-resolution PBR textures from public share links without an active subscription. The vulnerability is classified under:
+In the current architecture, unauthenticated clients can reconstruct full-resolution glTF 2.0 (`.glb`) models and embedded high-resolution PBR textures directly from public share links without completing a paid download transaction.
+
+The underlying architectural concerns are:
 - **CWE-602**: Client-Side Enforcement of Server-Side Security
 - **CWE-321**: Use of Hard-coded Cryptographic Key
 - **CWE-312**: Cleartext Storage of Sensitive Information
 
 ---
 
-## 2. Root Cause Analysis
+## 2. Root Cause Breakdown
 
-The vulnerability is rooted in four architectural issues:
+### A. Static Client-Side Key Material
+The WebAssembly runtime (`mesh_loader.wasm`) verifies an authorization signature passed to `instance.authorize(domain, timestamp, signature)`.
+- The signature is calculated using a 64-bit FNV-1a hash followed by a 64-bit Murmur3 avalanche finalizer.
+- The secret key (`"Meshy_Crypto_Key"`) is embedded within the client JavaScript and WebAssembly artifacts.
+- Because the hashing algorithm and key material reside entirely on the client, any external agent can compute valid signatures offline without authenticating against a backend service.
 
-### A. Client-Side Cryptographic Determinism
-The WebAssembly runtime (`mesh_loader.wasm`) enforces authorization by calling `instance.authorize(domain, timestamp, signature)`. 
-- The required signature is derived using a 64-bit FNV-1a hash followed by a 64-bit Murmur3 avalanche finalizer.
-- The secret key (`"Meshy_Crypto_Key"`) is hardcoded in the client-facing JavaScript and WebAssembly bundles.
-- Because both the algorithm and key reside on the client, any external client can generate valid authorization tokens offline without communicating with an authentication server.
+### B. Full Asset Delivery to Untrusted Clients
+The platform transmits the complete production asset (containing full-resolution meshes with 800,000+ faces and uncompressed PBR WebP texture sets) inside an encrypted `.meshy` container to unauthorized viewers. Once decrypted by the client runtime, the full model geometry becomes available in memory.
 
-### B. High-Fidelity Asset Delivery to Unpaid Viewers
-The platform serves the complete, full-resolution production asset (800,000+ faces, uncompressed vertex data, and full-resolution WebP diffuse, normal, and roughness maps) to the browser inside an encrypted `.meshy` container. 
+### C. Contiguous glTF Reconstruction in Memory
+The WebAssembly function `processMeshyFile()` reconstructs a complete, contiguous glTF 2.0 binary (`.glb`) buffer in WebAssembly linear memory before returning it to the JavaScript caller. This allows external tools or browser extensions to read the linear memory buffer directly and export standard `.glb` files.
 
-Once the client-side WebAssembly decrypter executes, it unpacks the full geometry directly into memory.
-
-### C. In-Memory Contiguous glTF Reconstruction
-The WebAssembly function `processMeshyFile()` reconstructs a standard, valid glTF 2.0 binary (`.glb`) buffer contiguously in WebAssembly linear memory before returning it to JavaScript. Any client or browser extension can capture this memory buffer and save it directly as an unlocked `.glb` file.
-
-### D. Next.js RSC Flight Header WAF Bypass
-Cloudflare Turnstile bot protection targets standard HTML navigation requests (`Accept: text/html`). Next.js App Router route requests containing React Server Component headers (`RSC: 1`, `Accept: text/x-component`) bypass standard Turnstile challenges on datacenter IP addresses, exposing signed CDN asset URLs programmatically.
+### D. Server Component Exposure via Edge Routing
+Cloudflare Turnstile bot verification targets standard HTML navigation requests (`Accept: text/html`). Requests specifying Next.js React Server Component headers (`RSC: 1`, `Accept: text/x-component`) bypass HTML verification checks on datacenter IP ranges, exposing signed CDN asset URLs programmatically.
 
 ---
 
-## 3. Phased Remediation Plan
+## 3. Recommended Remediation Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                 RECOMMENDED ARCHITECTURE                    │
 └─────────────────────────────────────────────────────────────┘
-  [3D Generation Engine]
+  [Asset Ingestion / Generation Engine]
             │
-            ├───> [1. Production Model] ───> Private Cold Storage (S3/GCS)
-            │     (850k faces, 4K PBR)       (Requires paid session & checkout)
+            ├───> [1. Production Model] ───> Private Storage (No Public CDN)
+            │     (Full geometry, 4K PBR)     (Requires active paid entitlement)
             │
             └───> [2. Web Preview Model] ──> Public CDN
-                  • Decimated geometry (50k faces)
+                  • Decimated geometry (approx. 50k faces)
                   • Downscaled textures (1024x1024)
-                  • Streamed directly to GPU VBOs
+                  • Streamed directly into GPU vertex buffers
 ```
 
 ---
 
-### Phase 1: Immediate Mitigations (Days 1 to 3)
+### Strategy 1: Dual-Asset Pipeline (Preview Decimation vs. Production Asset Separation)
 
-#### 1. Strip Direct Asset URLs from Initial RSC Streams
-Do not serialize signed CDN links directly into the public React Server Component tree during initial page loads.
-- Require the client browser to make a separate, authenticated request (`POST /api/v2/viewer/token`) after completing front-end Turnstile verification.
-- The endpoint should validate user session headers and return a single-use asset token.
+The most robust protection against client-side asset theft is decoupling the public web preview model from the production model. This is the industry standard employed by major 3D marketplaces and interactive web platforms:
 
-#### 2. Cloudflare WAF Managed Rule for Datacenter RSC Scraping
-Configure a Cloudflare WAF rule to challenge automated RSC router requests originating from commercial cloud datacenters:
-```text
-(http.request.uri.path contains "/3d-models/" and http.request.headers["rsc"] eq "1" and ip.src.asnum in {16509 14618 13335 396982 63949})
-```
-This blocks automated scrapers hosted on AWS, GCP, Render, DigitalOcean, and Hetzner from querying the flight router directly.
+1. **Production Asset Storage:**
+   The full-resolution asset (800,000+ faces, full-resolution textures) is stored exclusively in private cloud storage with no public CDN route. Access is restricted to an authenticated backend download endpoint that verifies account entitlements before generating single-use download links.
 
-#### 3. Short-Lived, IP-Restricted CDN Signed URLs
-Replace multi-year CDN signature expirations with short-lived tokens:
-- Set URL expiration time to 15 minutes or less.
-- Bind signed URL tokens to the client IP address (`Cloudflare-Signed-URL-Limits: ip=...`).
+2. **Decimated Web Preview Generation:**
+   During the asset generation pipeline, produce a lightweight preview variant reduced to approximately 10% of the original triangle count (e.g., using `meshoptimizer` or Blender decimation) with 1024x1024 textures.
+
+3. **Security Outcome:**
+   Even if a user extracts or intercepts the web model, they only obtain a low-density preview asset suitable for display. The full commercial asset is never transmitted to the browser during preview sessions.
 
 ---
 
-### Phase 2: Structural Architecture Fix (Weeks 1 to 2)
+### Strategy 2: Dynamic Ephemeral Key Exchange
 
-#### 1. Two-Tier Asset Generation (The Preview vs. Production Model)
-This is the standard approach used by professional 3D asset marketplaces (such as Sketchfab and Unreal Engine Marketplace):
-- **Production Asset:** The full-resolution model (800,000+ faces, full texture resolution) must be stored in private cloud storage with no public CDN route. It should only be accessible through an authenticated backend download endpoint that verifies user subscription status.
-- **Preview Asset:** During generation, produce a decimated model (reduced to approximately 50,000 faces) with 1024x1024 texture maps.
-- **Outcome:** Even if a user captures or decrypts the web viewer asset, they only obtain a low-poly preview mesh. The commercial value of the production model remains protected on the server.
+If client-side encryption is retained to deter direct scraping, remove all static keys from client-facing code:
 
-#### 2. Dynamic Ephemeral Key Exchange (Eliminating Static Keys)
-If encryption is retained to prevent casual network inspection, replace static keys with dynamic session keys:
-1. When the 3D viewer initializes, the client generates an ephemeral WebCrypto key pair (`ECDH` or `RSA-OAEP`).
-2. The client sends its public key to `POST /api/viewer/session-key`.
-3. The server generates a random AES-256-GCM session key, encrypts it with the client's public key, and returns the wrapped key.
-4. The WebAssembly decrypter unwraps the session key in memory and decrypts the preview stream.
-5. The session key expires after 60 seconds.
+1. When the 3D viewer initializes, the browser generates an ephemeral WebCrypto key pair (`ECDH` or `RSA-OAEP`).
+2. The browser submits its public key to an authenticated session endpoint (`POST /api/viewer/session-key`).
+3. The server generates a random AES-256-GCM session key, wraps it with the client public key, and returns the ciphertext.
+4. The WebAssembly decrypter unwraps the session key in memory, processes the encrypted stream, and immediately discards the key.
+5. The session key expires on the server after 60 seconds.
 
 ---
 
-### Phase 3: Advanced Client Protection (Weeks 3 to 4)
+### Strategy 3: Next.js Component Serialization & Edge WAF Policies
 
-#### 1. Direct-to-GPU Buffer Streaming (Zero In-Memory GLB Containers)
-Traditional client-side dumping relies on capturing the contiguous `.glb` buffer assembled in WebAssembly linear memory.
+To prevent automated scraping of signed asset URLs:
 
-To eliminate this attack vector:
-1. Modify `mesh_loader.wasm` so that it never constructs a glTF 2.0 container.
-2. The WebAssembly runtime decrypts individual vertex attribute slices (`POSITION`, `NORMAL`, `TEXCOORD_0`, `INDICES`) in small chunks.
-3. Each chunk is uploaded directly to WebGL/WebGPU Vertex Buffer Objects via `gl.bufferData(gl.ARRAY_BUFFER, ...)`.
-4. The memory buffers in WebAssembly are immediately cleared (`memset` to zero).
-5. Because no contiguous glTF or GLB binary ever exists in system memory, automated tools cannot dump a valid 3D container.
+1. **Decouple Asset URLs from Initial SSR Payloads:**
+   Do not include signed CDN links in the serialized React Server Component flight payload. The client application should make an explicit, session-authenticated API request to obtain the viewer token after the page finishes mounting.
+
+2. **Edge WAF Policies on Datacenter ASN Ranges:**
+   Configure edge WAF rules (such as Cloudflare Managed Rules) to inspect incoming requests carrying `RSC: 1` headers from known datacenter Autonomous System Numbers (e.g., AWS, Render, DigitalOcean, GCP). Enforce managed challenges when flight requests originate from automated hosting providers rather than residential or mobile consumer networks.
+
+3. **Short-Lived, IP-Restricted Presigned URLs:**
+   Configure CDN signing keys so that preview URLs expire within 10 to 15 minutes and validate client IP addresses at the edge.
 
 ---
 
-## 4. Remediation Comparison Matrix
+### Strategy 4: Direct-to-GPU Vertex Streaming
 
-| Remediation Strategy | Implementation Time | Implementation Complexity | Security Impact | Prevents Asset Extraction? |
+Client-side extraction tools rely on capturing contiguous `.glb` containers formed in WebAssembly linear memory.
+
+To neutralize memory capture:
+1. Refactor `mesh_loader.wasm` so that it does not assemble a complete glTF 2.0 container.
+2. Have the WebAssembly runtime decrypt discrete vertex attribute slices (`POSITION`, `NORMAL`, `TEXCOORD_0`, `INDICES`) sequentially.
+3. Stream each slice directly into WebGL or WebGPU Vertex Buffer Objects using `gl.bufferData(gl.ARRAY_BUFFER, ...)`.
+4. Clear WebAssembly memory buffers immediately after transfer.
+5. Because no contiguous glTF container is constructed in memory, external callers cannot dump a valid 3D file.
+
+---
+
+## 4. Architectural Comparison Matrix
+
+| Approach | Architectural Layer | Implementation Complexity | Protection Level | Eliminates Commercial Theft? |
 |---|---|---|---|---|
-| **WAF Datacenter RSC Rules** | 1 Day | Low | Medium | Stops automated cloud scrapers |
-| **Short-Lived IP-Bound URLs** | 2 Days | Low | Medium | Stops link sharing and reuse |
-| **Two-Tier Asset Decimation** | 1 Week | Moderate | Maximum | Yes (Production asset is never sent to browser) |
-| **Dynamic Ephemeral Key Exchange**| 1 Week | Moderate | High | Eliminates static key decryption |
-| **Direct-to-GPU VBO Streaming** | 2 to 3 Weeks | High | High | Prevents in-memory GLB reconstruction |
+| **Dual-Asset Decimation** | Asset Pipeline & Storage | Moderate | Maximum | Yes (High-res asset never reaches browser) |
+| **Direct-to-GPU Streaming** | Client WebAssembly Runtime | High | High | Yes (No contiguous 3D file in memory) |
+| **Ephemeral Key Exchange** | Transport & Key Management | Moderate | High | Substantial (Eliminates static key reuse) |
+| **WAF Datacenter Rules** | Edge Network | Low | Moderate | Substantial (Stops automated cloud scrapers) |
+| **IP-Bound Signed URLs** | CDN Distribution | Low | Moderate | Partial (Prevents URL sharing and caching) |
 
 ---
 
 ## 5. Conclusion
 
-Client-side cryptographic obfuscation cannot protect high-value assets if the decryption key and full-resolution data are delivered to an untrusted client environment. 
+Client-side cryptographic obfuscation cannot guarantee asset security if the decryption key and the full-resolution geometry are both delivered into an untrusted browser environment.
 
-The most robust and permanent defense is **Two-Tier Asset Generation**: strictly decoupling the public web preview model from the private production model.
+The definitive resolution is **Dual-Asset Decimation**: keeping the production model in private backend storage for authenticated downloads, while serving only an optimized, lightweight preview model to the browser viewer.
