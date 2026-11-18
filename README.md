@@ -1,13 +1,16 @@
 # Meshy AI 3D Model Extractor & Decrypter 🧊
 
-[![Node.js](https://img.shields.io/badge/Node.js-20%2B-brightgreen.svg)](https://nodejs.org)
-[![WebAssembly](https://img.shields.io/badge/Engine-WebAssembly-blueviolet.svg)](https://webassembly.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![3D: glTF 2.0](https://img.shields.io/badge/3D_Format-glTF_2.0_.glb-cyan.svg)](https://www.khronos.org/gltf/)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-meshy--model.onrender.com-f97316?style=for-the-badge&logo=render&logoColor=white)](https://meshy-model.onrender.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-20%2B-22c55e.svg?style=flat)](https://nodejs.org)
+[![WebAssembly](https://img.shields.io/badge/Engine-WebAssembly-blueviolet.svg?style=flat)](https://webassembly.org/)
+[![3D: glTF 2.0](https://img.shields.io/badge/3D_Format-glTF_2.0_.glb-06b6d4.svg?style=flat)](https://www.khronos.org/gltf/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat)](https://opensource.org/licenses/MIT)
 
 An open-source web application and high-performance CLI tool to **extract, decrypt, and download raw, uncompressed 3D models (`.glb`) from any public Meshy AI shareable link**.
 
 Features an interactive **3D CAD WebGL viewport**, local `.meshy` file drag-and-drop decryption, and zero-loss geometry reconstruction with full PBR textures.
+
+🌐 **Live Deployed Web App:** [https://meshy-model.onrender.com](https://meshy-model.onrender.com/)
 
 ---
 
@@ -28,6 +31,7 @@ If you paste a shortened link and encounter a Cloudflare challenge:
 
 ## ✨ Features
 
+- 🌐 **Live Web Application**: Hosted and ready to use at [meshy-model.onrender.com](https://meshy-model.onrender.com/).
 - 🛠️ **Technical CAD Workbench UI**: Precision industrial design system with zero generic gradients, featuring high-density telemetry readouts and monospace data feeds.
 - 🎮 **Interactive 3D Viewport**: Orbit, pan, zoom, toggle auto-rotation, and inspect the decrypted 3D model in full 3D with Google `<model-viewer>`.
 - 📁 **Offline File Decryption**: Drag and drop any locally downloaded `.meshy` container to unlock it into a standard `.glb`.
@@ -38,7 +42,7 @@ If you paste a shortened link and encounter a Cloudflare challenge:
 
 ---
 
-## 🚀 Quick Start (Web Application)
+## 🚀 Quick Start (Local Development)
 
 ### 1. Clone & Install Dependencies
 
@@ -79,14 +83,25 @@ npm run cli encrypted_model.meshy -o decrypted.glb
 
 The server exposes the following REST endpoints:
 
-| Endpoint                | Method   | Description                                                                                      |
-| ----------------------- | -------- | ------------------------------------------------------------------------------------------------ |
-| `/api/extract`        | `POST` | Resolves a share link and returns title, task ID, thumbnail, and signed payload URL.             |
-| `/api/process`        | `POST` | Fetches the `.meshy` container, runs WASM decryption, caches result, and returns download URL. |
-| `/api/download`       | `GET`  | Downloads the decrypted `.glb` model directly as an attachment (`Content-Disposition`).      |
-| `/api/model-stream`   | `GET`  | Streams raw `.glb` binary for live 3D WebGL viewers.                                           |
-| `/api/upload-decrypt` | `POST` | Accepts a multipart `.meshy` file upload and returns the decrypted `.glb`.                   |
-| `/api/health`         | `GET`  | Server status and uptime health check.                                                           |
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/extract` | `POST` | Resolves a share link and returns title, task ID, thumbnail, and signed payload URL. |
+| `/api/process` | `POST` | Fetches the `.meshy` container, runs WASM decryption, caches result, and returns download URL. |
+| `/api/download` | `GET` | Downloads the decrypted `.glb` model directly as an attachment (`Content-Disposition`). |
+| `/api/model-stream` | `GET` | Streams raw `.glb` binary for live 3D WebGL viewers. |
+| `/api/upload-decrypt` | `POST` | Accepts a multipart `.meshy` file upload and returns the decrypted `.glb`. |
+| `/api/health` | `GET` | Server status and uptime health check. |
+
+---
+
+## ☁️ Deployment
+
+The application is deployed on **[Render](https://render.com)** at [https://meshy-model.onrender.com](https://meshy-model.onrender.com/).
+
+To deploy your own instance:
+1. Connect your GitHub repository to Render as a **Web Service**.
+2. Set Build Command: `npm install` and Start Command: `npm start`.
+3. Or deploy via 1-click Blueprint using the included [`render.yaml`](render.yaml).
 
 ---
 
