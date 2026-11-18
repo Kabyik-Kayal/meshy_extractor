@@ -180,6 +180,33 @@ body {
   transform: scale(1.1);
 }
 
+.sponsor-header-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #fb7185;
+  background: rgba(244, 63, 94, 0.08);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  padding: 4px 10px;
+  border-radius: var(--radius-xs);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.sponsor-header-btn:hover {
+  background: rgba(244, 63, 94, 0.16);
+  border-color: rgba(244, 63, 94, 0.5);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.sponsor-header-btn svg {
+  fill: currentColor;
+}
+
 /* Hero Section */
 .hero-block {
   display: flex;
