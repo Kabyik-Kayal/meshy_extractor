@@ -14,24 +14,10 @@ Features an interactive **3D CAD WebGL viewport**, local `.meshy` file drag-and-
 
 ---
 
-## ⚠️ Important: Bypassing Cloudflare Bot Challenges
-
-Meshy AI protects its **shortened redirect routes** (`https://www.meshy.ai/s/...`) with Cloudflare Turnstile bot verification challenges.
-
-If you paste a shortened link and encounter a Cloudflare challenge:
-
-1. Open your shortened share link (`https://www.meshy.ai/s/xyz`) once in any browser tab.
-2. Once the 3D model loads, copy the **full expanded URL** from your browser address bar:
-   ```text
-   https://www.meshy.ai/3d-models/<Model-Name>-<Task-ID>
-   ```
-3. Paste that full canonical URL into the web application or CLI. Full model URLs load directly without triggering Cloudflare challenges.
-
----
-
 ## ✨ Features
 
 - 🌐 **Live Web Application**: Hosted and ready to use at [meshy-model.onrender.com](https://meshy-model.onrender.com/).
+- 🔗 **Dual Link Support**: Seamlessly extracts from full canonical URLs (`/3d-models/...`) and shortened links (`/s/...`) with automated Next.js RSC protocol bypass.
 - 🛠️ **Technical CAD Workbench UI**: Precision industrial design system with zero generic gradients, featuring high-density telemetry readouts and monospace data feeds.
 - 🎮 **Interactive 3D Viewport**: Orbit, pan, zoom, toggle auto-rotation, and inspect the decrypted 3D model in full 3D with Google `<model-viewer>`.
 - 📁 **Offline File Decryption**: Drag and drop any locally downloaded `.meshy` container to unlock it into a standard `.glb`.
